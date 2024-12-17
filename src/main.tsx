@@ -70,6 +70,7 @@ Devvit.addCustomPostType({
     const saveOrUpdateScore = async (username: string, score: number): Promise<void> => {
       const currentScore = await context.redis.hGet("scores", username);
       const newScore = currentScore ? parseInt(currentScore) + score : score;
+      console.log(newScore, username)
       await context.redis.hSet("scores", { [username]: newScore.toString() });
     };
 
@@ -128,31 +129,93 @@ Devvit.addCustomPostType({
       </vstack>
     );
 
+    const rankComponents = (
+      username: string,
+      correctAnswers: number,
+      index: number
+    ) => {
+      return (
+        <vstack width="100%">
+          <spacer size="small"></spacer>
+          <hstack
+            padding="small"
+            backgroundColor="#153864"
+            cornerRadius="small"
+            width="100%"
+            height="40px"
+            alignment="center middle"
+          >
+            <spacer size="small"></spacer>
+            <hstack width="30%">
+              <text size="medium">{index}</text>
+              <spacer size="small"></spacer>
+              <zstack cornerRadius="full" alignment="center middle">
+                <image
+                  url="reddit-bg.png"
+                  resizeMode="cover"
+                  imageHeight="24px"
+                  imageWidth="24px"
+                  width="24px"
+                  height="24px"
+                />
+              </zstack>
+              <spacer size="small"></spacer>
+              <text size="medium" alignment="center middle">
+                {username}
+              </text>
+            </hstack>
+            <spacer size="large"></spacer>
+            <hstack width="50%">
+              <vstack alignment="center middle">
+                <text size="large" color="#FFCB05" weight="bold">
+                  {correctAnswers}
+                </text>
+                <text size="xsmall">Pokemons collected</text>
+              </vstack>
+            </hstack>
+            <spacer size="large"></spacer>
+          </hstack>
+          <spacer size="small"></spacer>
+        </vstack>
+      );
+    };
+
     const renderLeaderboardScreen = () => (
-      <vstack gap="medium" alignment="center" padding="medium">
-        <text size="large" weight="bold">Top 3 Players</text>
+      <vstack gap="medium" width="100%" height="100%" alignment="start" padding="medium" backgroundColor="#316BB3">
+         <hstack padding="medium">
+          <icon
+            name="back"
+            color="#E3E1DE"
+            size="medium"
+            onPress={() => {
+              setCurrentScreen("home");
+            }}
+          ></icon>
+          <spacer size="medium"></spacer>
+          <text size="large" color="#E3E1DE" weight="bold">
+            Leaderboard
+          </text>
+        </hstack>
+        <text
+              color="#FFCB05"
+              weight="bold"
+              alignment="middle center"
+              width="100%"
+            >
+              Are you at the top?
+            </text>
         {loading ? (
           <text color="#FF8232">Loading leaderboard...</text>
         ) : error ? (
           <text color="#FF3232">Error loading leaderboard.</text>
         ) : leaderboardData && leaderboardData.length > 0 ? (
           leaderboardData.map((entry, index) => (
-            <hstack key={entry.username} gap="small">
-              <text>{`${index + 1}. ${entry.username}`}</text>
-              <text weight="bold">{entry.score}</text>
-            </hstack>
+            rankComponents(entry.username, entry.score, index+1)
           ))
         ) : (
           <text color="#E3E1DE">No scores available yet!</text>
         )}
-        <button
-          appearance="secondary"
-          onPress={() => {
-            setCurrentScreen("home");
-          }}
-        >
-          Back to Home
-        </button>
+        
       </vstack>
     );
 

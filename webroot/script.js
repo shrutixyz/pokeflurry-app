@@ -15,7 +15,7 @@ const levelUpButton = document.getElementById('level-up-button');
 
 const gameParent = document.getElementById('gameParent');
 const scoreElement = document.getElementById('score');
-
+const scoreEndElement = document.getElementById('scoreEnd')
 
 let username = "snoos";
 
@@ -38,7 +38,7 @@ let interval;
         if (timer <= 0) {
           clearInterval(interval);
           console.log('Time is up!');
-          // endGame();
+          endGame();
         } else {
           timer--;
           timerElement.textContent = timer;
@@ -46,7 +46,7 @@ let interval;
       }, 1000);
     }
 
-    const pokemonList = ['pikachu', 'spheal']; // Add folder names here
+    const pokemonList = ['pikachu', 'spheal']; // TODO: Add folder names here
 
     const assets = pokemonList.map(name => ({
       folder: name,
@@ -58,7 +58,16 @@ let interval;
       ]
     }));
     
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]]; // Swap elements
+      }
+    }
+    
     function loadCards(index) {
+      // Shuffle the assets array before loading cards
+      shuffleArray(assets);
       const pokemon = assets[index];
       const allCards = [
         { src: `assets/${pokemon.folder}/${pokemon.correct}`, isCorrect: true },
@@ -133,6 +142,8 @@ function handleGameCompletion(isLevelComplete) {
   } else {
       showGameOver();
   }
+
+  scoreEndElement.textContent = `Your Score: ${currentIndex * 100}`
 }
 
     function endGame(displayCongrats = false) {
