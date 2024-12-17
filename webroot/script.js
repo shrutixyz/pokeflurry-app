@@ -14,6 +14,8 @@ const gameOverMessage = document.getElementById('game-over-message');
 const levelUpButton = document.getElementById('level-up-button');
 
 const gameParent = document.getElementById('gameParent');
+const scoreElement = document.getElementById('score');
+
 
 let username = "snoos";
 
@@ -35,8 +37,8 @@ let interval;
         console.log(username)
         if (timer <= 0) {
           clearInterval(interval);
-          alert('Time is up!');
-          endGame();
+          console.log('Time is up!');
+          // endGame();
         } else {
           timer--;
           timerElement.textContent = timer;
@@ -98,6 +100,7 @@ let interval;
       currentIndex++;
       if (currentIndex < assets.length) {
         loadCards(currentIndex);
+        scoreElement.textContent = currentIndex * 100;
       } else {
         alert('You have completed all sets!');
         endGame(true);

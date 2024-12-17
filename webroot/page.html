@@ -12,10 +12,19 @@
   <body>
     <div id="gameParent">
       <div class="header">
-        <div class="title">Pokémon Challenge</div>
-        <div class="timer" id="timer">60</div>
+        <div class="left">
+          <p>Play</p>
+          <p>Score <span id="score">0</span></p>
+        </div>
+        <div class="right">
+          <img src="assets/logo.png" alt="">
+          <div class="timer-parent">
+            <img width="50" height="50" class="timer-icon" src="assets/timer-icon.png" alt="timer"/>
+            <div id="timer"></div>
+          </div>
+        </div>
       </div>
-    
+      <p>Identify the correct pokemon</p>
       <div class="cards" id="cards">
         <!-- Cards will be dynamically generated -->
       </div>
