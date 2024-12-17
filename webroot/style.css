@@ -73,37 +73,55 @@ body {
 
 .hidden {
   display: none;
-}
-
+}/* Base Styles */
 .game-over {
-  position: fixed;
+  text-align: center;
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  text-align: center;
-  background-color: white;
-  border: 2px solid #ddd;
-  border-radius: 10px;
-  padding: 20px 40px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+  max-width: 400px;
+  width: 100%;
 }
 
-.game-over h1 {
-  font-size: 2rem;
-  color: #ff0000;
-  margin-bottom: 20px;
+h1 {
+  font-size: 36px;
+  color: #ff6f61;
 }
 
-.game-over button {
-  padding: 10px 20px;
-  font-size: 1rem;
-  border: none;
-  border-radius: 5px;
-  background-color: #007bff;
+#game-over-message {
+  font-size: 18px;
+  margin-top: 10px;
+}
+
+button {
+  background-color: #ff6f61;
   color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
   cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
 }
 
-.game-over button:hover {
-  background-color: #0056b3;
+button:hover {
+  background-color: #e55d53;
+}
+
+/* Hidden Class */
+.hidden {
+  display: none;
+}
+
+#level-up-button {
+  background-color: #6c5ce7;
+}
+
+#level-up-button:hover {
+  background-color: #5e4ac3;
 }

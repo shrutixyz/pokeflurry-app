@@ -1,74 +1,55 @@
-import "./createPost.js";
-
 import { Devvit, useState } from "@devvit/public-api";
 
-// Defines the messages that are exchanged between Devvit and Web View
 type WebViewMessage =
-  | {
-      type: "initialData";
-      data: { username: string; currentCounter: number };
-    }
-  | {
-      type: "setCounter";
-      data: { newCounter: number };
-    }
-  | {
-      type: "updateCounter";
-      data: { currentCounter: number };
-    }
-  |  {
-      type: "changeScreen"
-      data: { screen: string };
-    };
+| {
+  type: "initialData";
+  data: { username: string; currentCounter: number };
+}
+  | { type: "setCounter"; data: { newCounter: number } }
+  | { type: "changeScreen"; data: { screen: string } }
+  | { type: "updateScore"; data: { username: string; score: number } };
 
 Devvit.configure({
   redditAPI: true,
   redis: true,
 });
 
-// Add a custom post type to Devvit
 Devvit.addCustomPostType({
   name: "Webview Example",
   height: "tall",
   render: (context) => {
-    // Load username with `useAsync` hook
     const [username] = useState(async () => {
       const currUser = await context.reddit.getCurrentUser();
       return currUser?.username ?? "anon";
     });
 
-    // Load latest counter from redis with `useAsync` hook
     const [counter, setCounter] = useState(async () => {
       const redisCount = await context.redis.get(`counter_${context.postId}`);
       return Number(redisCount ?? 0);
     });
 
-    // Create a reactive state for web view visibility
-    const [webviewVisible, setWebviewVisible] = useState(false);
+    const [currentScreen, setCurrentScreen] = useState<"home" | "game" | "leaderboard">("home");
+    const [leaderboard, setLeaderboard] = useState<{ username: string; score: number }[]>([]);
 
-    // When the web view invokes `window.parent.postMessage` this function is called
     const onMessage = async (msg: WebViewMessage) => {
       switch (msg.type) {
         case "setCounter":
-          await context.redis.set(
-            `counter_${context.postId}`,
-            msg.data.newCounter.toString()
-          );
-          context.ui.webView.postMessage("myWebView", {
-            type: "updateCounter",
-            data: {
-              currentCounter: msg.data.newCounter,
-            },
-          });
+          await context.redis.set(`counter_${context.postId}`, msg.data.newCounter.toString());
           setCounter(msg.data.newCounter);
           break;
+
         case "changeScreen":
-          if (msg.data.screen == "home") {
-            setWebviewVisible(false);
+          setCurrentScreen(msg.data.screen as "home" | "game" | "leaderboard");
+          if (msg.data.screen === "leaderboard") {
+            fetchLeaderboard();
           }
+          break;
+
+        case "updateScore":
+          await saveOrUpdateScore(msg.data.username, msg.data.score);
+          break;
 
         case "initialData":
-        case "updateCounter":
           break;
 
         default:
@@ -76,27 +57,26 @@ Devvit.addCustomPostType({
       }
     };
 
-    // When the button is clicked, send initial data to web view and show it
-    const onShowWebviewClick = () => {
-      setWebviewVisible(true);
-      context.ui.webView.postMessage("myWebView", {
-        type: "initialData",
-        data: {
-          username: username,
-          currentCounter: counter,
-        },
-      });
+    const saveOrUpdateScore = async (username: string, score: number): Promise<void> => {
+      const currentScore = await context.redis.hGet("scores", username);
+      const newScore = currentScore ? parseInt(currentScore) + score : score;
+      await context.redis.hSet("scores", { [username]: newScore.toString() });
     };
 
-    // Render the custom post type
-    return (
-      <vstack grow padding="small">
-        <text>{`iswebview: ${webviewVisible}`}</text>
-        <zstack
+    const fetchLeaderboard = async () => {
+      const scores = await context.redis.hGetAll("scores");
+      const sortedScores = Object.entries(scores || {})
+        .map(([user, score]) => ({ username: user, score: parseInt(score) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3);
+      setLeaderboard(sortedScores);
+    };
+
+    const renderHomeScreen = () => (
+      <zstack
           width="100%"
-          grow={!webviewVisible}
-          height={!webviewVisible ? "100%" : "0%"}
           backgroundColor="#316BB3"
+          height="100%"
         >
           <image
             url="bg.png"
@@ -128,28 +108,61 @@ Devvit.addCustomPostType({
               minWidth="128px"
               icon="play-fill"
               onPress={() => {
-                onShowWebviewClick();
+                context.ui.webView.postMessage("myWebView", {
+                  type: "initialData",
+                  data: {
+                    username: username,
+                    currentCounter: counter,
+                  },
+                });
+                setCurrentScreen('game')
               }}
             >
               {"play"}
             </button>
           </vstack>
         </zstack>
-        <vstack grow={webviewVisible} height={webviewVisible ? "100%" : "0%"}>
-          <vstack
-            border="thick"
-            borderColor="black"
-            height={webviewVisible ? "100%" : "0%"}
-          >
-            <webview
-              id="myWebView"
-              url="page.html"
-              onMessage={(msg) => onMessage(msg as WebViewMessage)}
-              grow
-              height={webviewVisible ? "100%" : "0%"}
-            />
-          </vstack>
-        </vstack>
+        
+    );
+
+    const renderGameScreen = () => (
+      <vstack
+      border="thick"
+      borderColor="black"
+      height="100%"
+    >
+      <webview
+        id="myWebView"
+        url="page.html"
+        onMessage={(msg) => onMessage(msg as WebViewMessage)}
+        grow
+      />
+    </vstack>
+    );
+
+    const renderLeaderboardScreen = () => (
+      <vstack gap="medium" alignment="center" padding="medium">
+        <text size="large" weight="bold">Top 3 Players</text>
+        {leaderboard.map((entry, index) => (
+          <hstack gap="small">
+            <text>{`${index + 1}. ${entry.username}`}</text>
+            <text weight="bold">{entry.score}</text>
+          </hstack>
+        ))}
+        <button
+          appearance="secondary"
+          onPress={() => setCurrentScreen("home")}
+        >
+          Back to Home
+        </button>
+      </vstack>
+    );
+
+    return (
+      <vstack grow>
+        {currentScreen === "home" && renderHomeScreen()}
+        {currentScreen === "game" && renderGameScreen()}
+        {currentScreen === "leaderboard" && renderLeaderboardScreen()}
       </vstack>
     );
   },

@@ -6,8 +6,24 @@ class App {
 
 const gameOverComponent = document.getElementById('gameOver');
 const restartButton = document.getElementById('restartButton');
+const gameOverText = document.getElementById('game-over-text');
+
+// Example logic to switch between "Game Over" and "Level Up" states
+const gameOverElement = document.getElementById('gameOver');
+const gameOverMessage = document.getElementById('game-over-message');
+const levelUpButton = document.getElementById('level-up-button');
+
 const gameParent = document.getElementById('gameParent');
 
+let username = "snoos";
+
+// In webroot/app.js
+window.addEventListener('message', (event) => {
+  if (event.data.type === 'devvit-message') {
+    username = event.data.data.message.data.username
+    console.log("inside", username, event.data)
+  }
+});
 
 let interval;
 
@@ -16,6 +32,7 @@ let interval;
 
     function startTimer() {
       interval = setInterval(() => {
+        console.log(username)
         if (timer <= 0) {
           clearInterval(interval);
           alert('Time is up!');
@@ -81,20 +98,74 @@ let interval;
       currentIndex++;
       if (currentIndex < assets.length) {
         loadCards(currentIndex);
-        nextSetButton.style.display = 'none';
       } else {
         alert('You have completed all sets!');
+        endGame(true);
       }
     }
 
-    function endGame() {
+
+function showGameOver() {
+  gameOverElement.classList.remove('hidden');
+  gameOverText.textContent = 'Game Over!';
+  gameOverMessage.textContent = 'Try again or level up!';
+  restartButton.classList.remove('hidden');
+  levelUpButton.classList.add('hidden');
+}
+
+function showLevelUp() {
+  gameOverElement.classList.remove('hidden');
+  gameOverText.textContent = 'Congratulations!';
+  gameOverMessage.textContent = "You’ve caught 'em all and become a Pokémon Master!";
+  restartButton.classList.add('hidden');
+  levelUpButton.classList.remove('hidden');
+}
+
+
+// Simulate crossing all levels or game over
+// Use this depending on your game logic
+function handleGameCompletion(isLevelComplete) {
+  if (isLevelComplete) {
+      showLevelUp();
+  } else {
+      showGameOver();
+  }
+}
+
+    function endGame(displayCongrats = false) {
       cardsContainer.innerHTML = '';
       gameOverComponent.classList.remove('hidden');
-      gameParent.classList.add('hidden')
+      gameParent.classList.add('hidden');
+      if (displayCongrats) {
+        handleGameCompletion(true)
+      }
+      else
+      {
+        handleGameCompletion(false)
+      }
       clearInterval(interval)
+      console.log("swnding score: ", username, currentIndex)
+      // update score
+      window.parent?.postMessage(
+        {
+          type: 'updateScore',
+          data: { 'username' : username, 'score': currentIndex},
+        },
+        '*'
+      );
     }
 
     restartButton.addEventListener('click', () => {
+      window.parent?.postMessage(
+        {
+          type: 'changeScreen',
+          data: { 'screen' : 'home'},
+        },
+        '*'
+      );
+    });
+
+    levelUpButton.addEventListener('click', () => {
       window.parent?.postMessage(
         {
           type: 'changeScreen',
