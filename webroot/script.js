@@ -2,19 +2,24 @@ class App {
   constructor() {
     const cardsContainer = document.getElementById('cards');
     const timerElement = document.getElementById('timer');
-    const nextSetButton = document.getElementById('nextSetButton');
 
 
+const gameOverComponent = document.getElementById('gameOver');
+const restartButton = document.getElementById('restartButton');
+const gameParent = document.getElementById('gameParent');
+
+
+let interval;
 
     let timer = 60;
     let currentIndex = 0;
 
     function startTimer() {
-      const interval = setInterval(() => {
+      interval = setInterval(() => {
         if (timer <= 0) {
           clearInterval(interval);
           alert('Time is up!');
-          location.reload();
+          endGame();
         } else {
           timer--;
           timerElement.textContent = timer;
@@ -60,6 +65,7 @@ class App {
             // nextSetButton.style.display = 'block';
           } else {
             console.log('Incorrect! Game Over!');
+            endGame();
           }
         });
     
@@ -80,6 +86,23 @@ class App {
         alert('You have completed all sets!');
       }
     }
+
+    function endGame() {
+      cardsContainer.innerHTML = '';
+      gameOverComponent.classList.remove('hidden');
+      gameParent.classList.add('hidden')
+      clearInterval(interval)
+    }
+
+    restartButton.addEventListener('click', () => {
+      window.parent?.postMessage(
+        {
+          type: 'changeScreen',
+          data: { 'screen' : 'home'},
+        },
+        '*'
+      );
+    });
 
     // Initialize
     startTimer();

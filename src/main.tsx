@@ -15,6 +15,10 @@ type WebViewMessage =
   | {
       type: "updateCounter";
       data: { currentCounter: number };
+    }
+  |  {
+      type: "changeScreen"
+      data: { screen: string };
     };
 
 Devvit.configure({
@@ -58,6 +62,11 @@ Devvit.addCustomPostType({
           });
           setCounter(msg.data.newCounter);
           break;
+        case "changeScreen":
+          if (msg.data.screen == "home") {
+            setWebviewVisible(false);
+          }
+
         case "initialData":
         case "updateCounter":
           break;
