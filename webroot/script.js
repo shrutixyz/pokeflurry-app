@@ -12,9 +12,15 @@ class App {
     const gameParent = document.getElementById('gameParent');
     const scoreElement = document.getElementById('score');
     const scoreEndElement = document.getElementById('scoreEnd');
+    const correctAudio = new Audio('assets/correctAudio.mp3');
+    const incorrectAudio = new Audio('assets/incorrectAudio.mp3');
+    const winner = new Audio('assets/winner.mp3');
+    const loser = new Audio('assets/loser.mp3');
+    // const gameStart = new Audio('assets/gamestart.mp3');
+
 
     let username = "snoos";
-
+    // gameStart.play()
     // Track used Pokémon
     const usedPokemon = new Set();
     window.addEventListener('message', (event) => {
@@ -27,7 +33,7 @@ class App {
     let currentIndex = 0;
     let interval;
 
-    const pokemonList = ['pikachu', 'spheal', 'shemdi']; // TODO: Add folder names here
+    const pokemonList = ['pikachu', 'bulbasaur', 'eevee', 'meowth', 'charizard']; // TODO: Add folder names here
 
     const assets = pokemonList.map(name => ({
       folder: name,
@@ -47,6 +53,7 @@ class App {
     }
 
     function startTimer() {
+      
       interval = setInterval(() => {
         if (timer <= 0) {
           clearInterval(interval);
@@ -119,7 +126,9 @@ class App {
         cardElement.addEventListener('click', () => {
           if (card.isCorrect) {
             nextSet();
+            correctAudio.play()
           } else {
+            incorrectAudio.play()
             endGame();
           }
         });
@@ -171,6 +180,7 @@ class App {
     }
 
     function showGameOver() {
+      loser.play()
       gameOverElement.classList.remove('hidden');
       gameOverText.textContent = 'Game Over!';
       gameOverMessage.textContent = 'Try again or level up!';
@@ -179,6 +189,7 @@ class App {
     }
 
     function showLevelUp() {
+      winner.play()
       gameOverElement.classList.remove('hidden');
       gameOverText.textContent = 'Congratulations!';
       gameOverMessage.textContent = "You've collected 'em all and become a Pokémon Master!";
