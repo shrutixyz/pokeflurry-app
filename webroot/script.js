@@ -2,51 +2,32 @@ class App {
   constructor() {
     const cardsContainer = document.getElementById('cards');
     const timerElement = document.getElementById('timer');
+    const pokemonName = document.getElementById('pokemonname');
+    const gameOverComponent = document.getElementById('gameOver');
+    const restartButton = document.getElementById('restartButton');
+    const gameOverText = document.getElementById('game-over-text');
+    const gameOverElement = document.getElementById('gameOver');
+    const gameOverMessage = document.getElementById('game-over-message');
+    const levelUpButton = document.getElementById('level-up-button');
+    const gameParent = document.getElementById('gameParent');
+    const scoreElement = document.getElementById('score');
+    const scoreEndElement = document.getElementById('scoreEnd');
 
+    let username = "snoos";
 
-const gameOverComponent = document.getElementById('gameOver');
-const restartButton = document.getElementById('restartButton');
-const gameOverText = document.getElementById('game-over-text');
-
-// Example logic to switch between "Game Over" and "Level Up" states
-const gameOverElement = document.getElementById('gameOver');
-const gameOverMessage = document.getElementById('game-over-message');
-const levelUpButton = document.getElementById('level-up-button');
-
-const gameParent = document.getElementById('gameParent');
-const scoreElement = document.getElementById('score');
-const scoreEndElement = document.getElementById('scoreEnd')
-
-let username = "snoos";
-
-// In webroot/app.js
-window.addEventListener('message', (event) => {
-  if (event.data.type === 'devvit-message') {
-    username = event.data.data.message.data.username
-    console.log("inside", username, event.data)
-  }
-});
-
-let interval;
-
-    let timer = 60;
+    // Track used Pokémon
+    const usedPokemon = new Set();
+    window.addEventListener('message', (event) => {
+      if (event.data.type === 'devvit-message') {
+        username = event.data.data.message.data.username
+        console.log("inside", username, event.data)
+      }
+    });
+        let timer = 60;
     let currentIndex = 0;
+    let interval;
 
-    function startTimer() {
-      interval = setInterval(() => {
-        console.log(username)
-        if (timer <= 0) {
-          clearInterval(interval);
-          console.log('Time is up!');
-          endGame();
-        } else {
-          timer--;
-          timerElement.textContent = timer;
-        }
-      }, 1000);
-    }
-
-    const pokemonList = ['pikachu', 'spheal']; // TODO: Add folder names here
+    const pokemonList = ['pikachu', 'spheal', 'shemdi']; // TODO: Add folder names here
 
     const assets = pokemonList.map(name => ({
       folder: name,
@@ -57,17 +38,37 @@ let interval;
         `${name}-incorrect3.jpg`
       ]
     }));
-    
+
     function shuffleArray(array) {
       for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]]; // Swap elements
       }
     }
-    
+
+    function startTimer() {
+      interval = setInterval(() => {
+        if (timer <= 0) {
+          clearInterval(interval);
+          endGame();
+        } else {
+          timer--;
+          timerElement.textContent = timer;
+        }
+      }, 1000);
+    }
+
+    function getNextPokemon() {
+      if (usedPokemon.size >= assets.length) return null; // All Pokémon used
+      let nextIndex;
+      do {
+        nextIndex = Math.floor(Math.random() * assets.length);
+      } while (usedPokemon.has(nextIndex));
+      usedPokemon.add(nextIndex);
+      return nextIndex;
+    }
+
     function loadCards(index) {
-      // Shuffle the assets array before loading cards
-      shuffleArray(assets);
       const pokemon = assets[index];
       const allCards = [
         { src: `assets/${pokemon.folder}/${pokemon.correct}`, isCorrect: true },
@@ -76,104 +77,120 @@ let interval;
         }))
       ];
     
-      // Shuffle cards
-      allCards.sort(() => Math.random() - 0.5);
+      shuffleArray(allCards);
     
       cardsContainer.innerHTML = '';
-      allCards.forEach(card => {
+      const totalCards = allCards.length;
+      const angleIncrement = 20; // Degrees between cards
+      const startAngle = -((totalCards - 1) * angleIncrement) / 2; // Center the arch
+    
+      const symbols = ['♠', '♥', '♦', '♣']; // Symbols to choose from
+    
+      allCards.forEach((card, i) => {
+        const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)]; // Pick a random symbol
         const cardElement = document.createElement('div');
         cardElement.className = 'card';
-        cardElement.innerHTML = `<img src="${card.src}" alt="Pokemon Card">`;
     
+        // Add a placeholder with the random symbol
+        cardElement.innerHTML = `
+          <div class="card-placeholder">${randomSymbol}</div>
+          <img src="${card.src}" alt="Pokemon Card" style="display: none;">
+        `;
+    
+        // Calculate rotation angle
+        const angle = startAngle + i * angleIncrement;
+    
+        // Adjust vertical positioning for arch effect
+        const translateY = Math.abs(angle) * 2; // Higher angle means higher placement
+    
+        // Apply transformations
+        cardElement.style.transform = `rotate(${angle}deg) translateY(${translateY}px)`;
+    
+        // Load image and replace placeholder
+        const imgElement = cardElement.querySelector('img');
+        const placeholder = cardElement.querySelector('.card-placeholder');
+    
+        imgElement.onload = () => {
+          placeholder.style.display = 'none';
+          imgElement.style.display = 'block';
+        };
+    
+        // Handle click events
         cardElement.addEventListener('click', () => {
-          console.log("card:", card)
           if (card.isCorrect) {
-            console.log('Correct!');
             nextSet();
-            // nextSetButton.style.display = 'block';
           } else {
-            console.log('Incorrect! Game Over!');
             endGame();
           }
         });
     
         cardsContainer.appendChild(cardElement);
       });
+    
+      pokemonName.innerHTML = pokemon.correct.split("-correct")[0].toUpperCase();
     }
-
-    // nextSetButton.addEventListener('click', () => {
-      
-    // });
-
+    
     function nextSet() {
-      currentIndex++;
-      if (currentIndex < assets.length) {
-        loadCards(currentIndex);
-        scoreElement.textContent = currentIndex * 100;
+      const nextIndex = getNextPokemon();
+      if (nextIndex === null) {
+        currentIndex++;
+        endGame(true); // Game over when all Pokémon are used
       } else {
-        alert('You have completed all sets!');
-        endGame(true);
+        currentIndex++;
+        loadCards(nextIndex);
+        scoreElement.textContent = currentIndex * 100;
       }
     }
-
-
-function showGameOver() {
-  gameOverElement.classList.remove('hidden');
-  gameOverText.textContent = 'Game Over!';
-  gameOverMessage.textContent = 'Try again or level up!';
-  restartButton.classList.remove('hidden');
-  levelUpButton.classList.add('hidden');
-}
-
-function showLevelUp() {
-  gameOverElement.classList.remove('hidden');
-  gameOverText.textContent = 'Congratulations!';
-  gameOverMessage.textContent = "You’ve caught 'em all and become a Pokémon Master!";
-  restartButton.classList.add('hidden');
-  levelUpButton.classList.remove('hidden');
-}
-
-
-// Simulate crossing all levels or game over
-// Use this depending on your game logic
-function handleGameCompletion(isLevelComplete) {
-  if (isLevelComplete) {
-      showLevelUp();
-  } else {
-      showGameOver();
-  }
-
-  scoreEndElement.textContent = `Your Score: ${currentIndex * 100}`
-}
 
     function endGame(displayCongrats = false) {
       cardsContainer.innerHTML = '';
       gameOverComponent.classList.remove('hidden');
       gameParent.classList.add('hidden');
       if (displayCongrats) {
-        handleGameCompletion(true)
+        handleGameCompletion(true);
+      } else {
+        handleGameCompletion(false);
       }
-      else
-      {
-        handleGameCompletion(false)
-      }
-      clearInterval(interval)
-      console.log("swnding score: ", username, currentIndex)
-      // update score
+      clearInterval(interval);
       window.parent?.postMessage(
         {
           type: 'updateScore',
-          data: { 'username' : username, 'score': currentIndex},
+          data: { username, score: currentIndex },
         },
         '*'
       );
+    }
+
+    function handleGameCompletion(isLevelComplete) {
+      if (isLevelComplete) {
+        showLevelUp();
+      } else {
+        showGameOver();
+      }
+      scoreEndElement.textContent = `Your Score: ${currentIndex * 100}`;
+    }
+
+    function showGameOver() {
+      gameOverElement.classList.remove('hidden');
+      gameOverText.textContent = 'Game Over!';
+      gameOverMessage.textContent = 'Try again or level up!';
+      restartButton.classList.remove('hidden');
+      levelUpButton.classList.add('hidden');
+    }
+
+    function showLevelUp() {
+      gameOverElement.classList.remove('hidden');
+      gameOverText.textContent = 'Congratulations!';
+      gameOverMessage.textContent = "You've collected 'em all and become a Pokémon Master!";
+      restartButton.classList.add('hidden');
+      levelUpButton.classList.remove('hidden');
     }
 
     restartButton.addEventListener('click', () => {
       window.parent?.postMessage(
         {
           type: 'changeScreen',
-          data: { 'screen' : 'home'},
+          data: { screen: 'home' },
         },
         '*'
       );
@@ -183,7 +200,7 @@ function handleGameCompletion(isLevelComplete) {
       window.parent?.postMessage(
         {
           type: 'changeScreen',
-          data: { 'screen' : 'home'},
+          data: { screen: 'home' },
         },
         '*'
       );
@@ -191,8 +208,8 @@ function handleGameCompletion(isLevelComplete) {
 
     // Initialize
     startTimer();
-    loadCards(currentIndex);
-  
+    const firstIndex = getNextPokemon();
+    loadCards(firstIndex);
   }
 }
 

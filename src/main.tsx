@@ -69,7 +69,14 @@ Devvit.addCustomPostType({
 
     const saveOrUpdateScore = async (username: string, score: number): Promise<void> => {
       const currentScore = await context.redis.hGet("scores", username);
-      const newScore = currentScore ? parseInt(currentScore) + score : score;
+      // const newScore = currentScore ? parseInt(currentScore) + score : score;
+      let newScore = score;
+      if(currentScore){
+        if(parseInt(currentScore)>newScore){
+          newScore = parseInt(currentScore)
+        }
+      }
+      // const newScore = currentScore>score?curr;
       console.log(newScore, username)
       await context.redis.hSet("scores", { [username]: newScore.toString() });
     };
@@ -84,12 +91,13 @@ Devvit.addCustomPostType({
           width="100%"
           height="100%"
         />
-        <vstack width="100%" height="100%" alignment="center" gap="large" padding="medium">
+        <vstack width="100%" height="100%" alignment="center middle" gap="large" padding="medium">
           <vstack width="100%" alignment="center" gap="none">
             <image url="logo.png" imageWidth="621px" imageHeight="167.5px" width="100%" resizeMode="fit" />
           </vstack>
+          <hstack width="100%" alignment="center middle">
           <button
-            appearance="primary"
+            appearance="success"
             size="large"
             minWidth="128px"
             icon="play-fill"
@@ -101,19 +109,22 @@ Devvit.addCustomPostType({
               setCurrentScreen('game');
             }}
           >
-            {"play"}
+            {"Play   Game"}
+            
           </button>
+          <spacer size="large"></spacer>
           <button
-            appearance="primary"
+            appearance="success"
             size="large"
             minWidth="128px"
-            icon="play-fill"
+            icon="dashboard"
             onPress={() => {
               setCurrentScreen('leaderboard');
             }}
           >
-            {"view leaderboard"}
+            {"Leaderboard"}
           </button>
+          </hstack>
         </vstack>
       </zstack>
     );

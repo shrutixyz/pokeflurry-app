@@ -1,5 +1,9 @@
+/* @import url('https://fonts.googleapis.com/css2?family=Cute+Font&display=swap'); */
+
+
 body {
   font-family: Arial, sans-serif;
+  /* font-family: 'Cute Font', cursive; */
   margin: 0;
   padding: 1rem;
   width: 100%;
@@ -15,7 +19,8 @@ body {
 .header {
   display: flex;
   justify-content: space-between;
-  width: 80%;
+  align-items: center;
+  width: 100%;
   padding: 10px 5px;
 }
 
@@ -52,10 +57,13 @@ body {
 }
 
 .cards {
-  width: 50%;
+  width: 100%;
   margin: 20px auto;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  /* display: grid; */
+  /* grid-template-columns: repeat(2, 1fr); */
   gap: 15px;
 }
 
@@ -81,8 +89,23 @@ body {
   object-position: center;
 }
 
+
+.card-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 3rem; /* Large enough to stand out */
+  font-weight: bold;
+  color: white; /* Neutral color for symbols */
+  text-align: center;
+}
+
 .identify {
   color: white;
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
 }
 
 .hidden {
@@ -138,4 +161,28 @@ button:hover {
 
 #level-up-button:hover {
   background-color: #5e4ac3;
+}
+
+
+.left{
+  font-size: 1.5rem;
+
+}
+
+.topright{
+  margin-bottom: -0.5rem;
+  margin-top: -0.5rem;
+}
+.right {
+  margin-right: 2rem;
+}
+
+.pokemonname{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFCB05;
+  margin-top: 5rem;
+  font-size: 1.5rem;
+  font-weight: bold;
 }
